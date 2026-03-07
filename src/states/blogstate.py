@@ -18,7 +18,7 @@ class BlogOutline(BaseModel):
 class TitleMeta(BaseModel):
     """Structured output model for the title generation node."""
     title: str = Field(description="SEO friendly, engaging blog title")
-    meta_description: str = Field(max_length=155, description="SEO meta description (max 155 chars)")
+    meta_description: str = Field(description="SEO meta description (aim for under 155 chars)")
 
 class ReviewResult(BaseModel):
     review_score: int = Field(description="Quality score 1-10")
@@ -32,7 +32,7 @@ class TakeawayCTA(BaseModel):
 class Blog(BaseModel):
     """Complete structured blog article."""
     title: str = Field(description="SEO friendly, engaging blog title")
-    meta_description: str = Field(max_length=155, description="SEO meta description (max 155 chars)")
+    meta_description: str = Field(description="SEO meta description (aim for under 155 chars)")
     introduction: str = Field(description="Hook paragraph - opens with pain point, stat, or bold claim")
     sections: List[BlogSection] = Field(description="3-5 detailed body section")
     key_takeaways: List[str] = Field(description="3-5 concise, actionable takeaways")

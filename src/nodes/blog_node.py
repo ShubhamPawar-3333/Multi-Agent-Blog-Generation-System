@@ -6,12 +6,13 @@ class BlogNode:
     """
     A class to represent the blog node in the graph.
     """
-    def __init__(self, llm):
-        self.llm = llm
+    def __init__(self, fast_llm, quality_llm):
+        self.fast_llm = fast_llm
+        self.quality_llm = quality_llm
     
     def outline_generation(self, state: BlogState):
         """Generate a structured outline from the topic."""
-        structured_llm = self.llm.with_structured_output(BlogOutline)
+        structured_llm = self.fast_llm.with_structured_output(BlogOutline)
         prompt = """
                     You are a senior content strategist.
                     Topic: {topic}
@@ -30,7 +31,7 @@ class BlogNode:
         """
         Generate SEO title and meta description from topic + outline.
         """
-        structured_llm = self.llm.with_structured_output(TitleMeta)
+        structured_llm = self.fast_llm.with_structured_output(TitleMeta)
         prompt = """
                     You are an SEO specialist.
                     Topic: {topic}
@@ -71,7 +72,7 @@ class BlogNode:
             title = blog.title,
             sections = [s.heading for s in state["outline"].sections]
         )
-        response = self.llm.invoke(system_message)
+        response = self.quality_llm.invoke(system_message)
         blog.introduction = response.content.strip()
 
         return {"blog": blog}
@@ -132,7 +133,7 @@ class BlogNode:
                     heading = heading,
                     key_points = key_points
                 )
-            response = self.llm.invoke(system_message)
+            response = self.quality_llm.invoke(system_message)
             section = BlogSection(
                 heading = heading,
                 content = response.content.strip()
@@ -146,7 +147,7 @@ class BlogNode:
         blog = state["blog"]
         review_count = state.get("review_count", 0)
 
-        structured_llm = self.llm.with_structured_output(ReviewResult)
+        structured_llm = self.quality_llm.with_structured_output(ReviewResult)
 
         full_content = "\n\n".join(
             [blog.introduction] +
@@ -182,7 +183,7 @@ class BlogNode:
             Generate Key takeaways and call-to-action from the full blog.
         """
         blog = state["blog"]
-        structured_llm = self.llm.with_structured_output(TakeawayCTA)
+        structured_llm = self.quality_llm.with_structured_output(TakeawayCTA)
 
         full_content = "\n\n".join(
             [blog.introduction] +
@@ -231,7 +232,7 @@ class BlogNode:
                                 {full_blog_markdown}
                             """
 
-        response = self.llm.invoke(
+        response = self.quality_llm.invoke(
             [HumanMessage(content=translation_prompt)]
         )
 

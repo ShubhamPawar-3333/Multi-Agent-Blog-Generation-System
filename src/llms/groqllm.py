@@ -6,11 +6,20 @@ import os
 class GroqLLM:
     def __init__(self):
         load_dotenv()
+        self.groq_api_key = os.getenv("GROQ_API_KEY")
 
-    def get_llm(self):
+    def get_llm(self, model_name: str):
         try:
-            os.environ["GROQ_API_KEY"] = self.groq_api_key = os.getenv("GROQ_API_KEY")
-            llm = ChatGroq(api_key=self.groq_api_key, model_name="llama-3.1-8b-instant")
+            llm = ChatGroq(
+                api_key=self.groq_api_key,
+                model_name=model_name
+            )
             return llm
         except Exception as e:
             raise ValueError(f"Error occured with exception: {e}")
+    
+    def fast_llm(self):
+        return self.get_llm("llama-3.1-8b-instant")
+
+    def quality_llm(self):
+        return self.get_llm("llama-3.3-70b-versatile")

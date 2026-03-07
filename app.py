@@ -24,10 +24,11 @@ async def create_blogs(request:Request):
     ## get the llm object
 
     groqllm=GroqLLM()
-    llm=groqllm.get_llm()
+    fast_llm = groqllm.fast_llm()
+    quality_llm = groqllm.quality_llm()
 
     ## get the graph
-    graph_builder=GraphBuilder(llm)
+    graph_builder=GraphBuilder(fast_llm, quality_llm)
     if topic and language:
         graph=graph_builder.setup_graph(usecase="language")
 
