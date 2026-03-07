@@ -1,6 +1,6 @@
 from src.states.blogstate import BlogState
 from langchain_core.messages import HumanMessage
-from src.states.blogstate import Blog, BlogOutline, BlogSection, TitleMeta, TakeawayCTA
+from src.states.blogstate import Blog, BlogOutline, BlogSection, TitleMeta, TakeawayCTA, ReviewResult
 
 class BlogNode:
     """
@@ -41,7 +41,7 @@ class BlogNode:
                  """
         system_message = prompt.format(
             topic = state["topic"],
-            sections = state["outline"].sections
+            sections = [s.heading for s in state["outline"].sections]
         )
         response = structured_llm.invoke(system_message)
         blog = Blog(
@@ -69,7 +69,7 @@ class BlogNode:
                  """
         system_message = prompt.format(
             title = blog.title,
-            sections = state["outline"].sections
+            sections = [s.heading for s in state["outline"].sections]
         )
         response = self.llm.invoke(system_message)
         blog.introduction = response.content.strip()
@@ -82,28 +82,56 @@ class BlogNode:
         """
         blog = state["blog"]
         outline = state["outline"]
+        review_feedback = state.get("review_feedback", "")
         sections = []
 
-        for idx, heading in enumerate(outline.sections):
-            key_points = outline.key_points[idx]
-            prompt = """
-                        You are an expert blog writer.
+        feedback_context = ""
+        if review_feedback:
+            feedback_context = f"Previous review feedback: {review_feedback}. Address these issues in your writing."
 
-                        Blog Title: {title}
-                        Section Heading: {heading}
+        for section_data in outline.sections:
+            heading = section_data.heading
+            key_points = section_data.key_points
 
-                        Key Points to cover:
-                        {key_points}
+            if review_feedback:
+                # REWRITE prompt - focused on addressing specific feedback.
+                prompt = """
+                            You are an expert blog writer revising a section.
 
-                        Write a detailed, high-quality markdown section.
-                        Include examples were relevant.
-                        DO NOT include the section heading in your response - just the content.
-                     """
-            system_message = prompt.format(
-                title = blog.title,
-                heading = heading,
-                key_points = key_points
-            )
+                            Blog Title: {title}
+                            Section Heading: {heading}
+                            Key Points: {key_points}
+
+                            Previous reviewer feedback:
+                            {review_feedback}
+
+                            Rewrite this section addressing the feedback above.
+                            Maintain depth and quality. DO NOT include the heading.
+                         """
+                system_message = prompt.format(
+                    title = blog.title,
+                    heading = heading,
+                    key_points = key_points,
+                    review_feedback = review_feedback
+                )
+            else:
+                # First-GENERATION prompt - focused on creating great content
+                prompt = """
+                            You are an expert blog writer.
+
+                            Blog Title: {title}
+                            Section Heading: {heading}
+                            Key Points: {key_points}
+
+                            Write a detailed, high-quality markdown section.
+                            Include examples were relevant.
+                            DO NOT include the section heading.
+                        """
+                system_message = prompt.format(
+                    title = blog.title,
+                    heading = heading,
+                    key_points = key_points
+                )
             response = self.llm.invoke(system_message)
             section = BlogSection(
                 heading = heading,
@@ -113,6 +141,41 @@ class BlogNode:
         
         blog.sections = sections
         return {"blog": blog}
+    
+    def review(self, state: BlogState):
+        blog = state["blog"]
+        review_count = state.get("review_count", 0)
+
+        structured_llm = self.llm.with_structured_output(ReviewResult)
+
+        full_content = "\n\n".join(
+            [blog.introduction] +
+            [f"## {section.heading}\n{section.content}" for section in blog.sections]
+        )
+
+        prompt = """
+                    You are a blog editor.
+                    Score this blog from 1-10 on coherence, depth, engagement, structure, completeness.
+
+                    Blog content:
+                    {full_content}
+                 """
+        system_message = prompt.format(
+            full_content = full_content
+        )
+        result = structured_llm.invoke(system_message)
+        return  {
+            "review_feedback": result.feedback,
+            "review_count": review_count + 1,
+            "review_score": result.review_score
+        }
+    
+    def review_decision(self, state):
+        if state.get("review_count", 0) >= 2:
+            return "pass"
+        if state.get("review_score", 10) >= 7:
+            return "pass"
+        return "rewrite"
 
     def takeaways_cta(self, state: BlogState):
         """

@@ -20,6 +20,7 @@ class GraphBuilder:
         self.graph.add_node("intro_generation",self.blog_node_obj.intro_generation)
         self.graph.add_node("section_generation", self.blog_node_obj.section_generation)
         self.graph.add_node("takeaways_cta", self.blog_node_obj.takeaways_cta)
+        self.graph.add_node("review", self.blog_node_obj.review)
 
         # Edges
         self.graph.add_edge(START, "outline_generation")
@@ -27,7 +28,15 @@ class GraphBuilder:
         self.graph.add_edge("title_creation", "intro_generation")
         self.graph.add_edge("intro_generation", "section_generation")
         self.graph.add_edge("section_generation", "takeaways_cta")
-        self.graph.add_edge("takeaways_cta", END)
+        self.graph.add_edge("takeaways_cta", "review")
+        self.graph.add_conditional_edges(
+            "review",
+            self.blog_node_obj.review_decision,
+            {
+                "pass": END,
+                "rewrite": "section_generation"
+            }
+        )
 
         return self.graph
 
@@ -43,6 +52,7 @@ class GraphBuilder:
         self.graph.add_node("intro_generation",self.blog_node_obj.intro_generation)
         self.graph.add_node("section_generation", self.blog_node_obj.section_generation)
         self.graph.add_node("takeaways_cta", self.blog_node_obj.takeaways_cta)
+        self.graph.add_node("review", self.blog_node_obj.review)
         self.graph.add_node("translation", self.blog_node_obj.translation)
 
         # Edges
@@ -51,7 +61,15 @@ class GraphBuilder:
         self.graph.add_edge("title_creation", "intro_generation")
         self.graph.add_edge("intro_generation", "section_generation")
         self.graph.add_edge("section_generation", "takeaways_cta")
-        self.graph.add_edge("takeaways_cta", "translation")
+        self.graph.add_edge("takeaways_cta", "review")
+        self.graph.add_conditional_edges(
+            "review",
+            self.blog_node_obj.review_decision,
+            {
+                "pass": "translation",
+                "rewrite": "section_generation"
+            }
+        )
         self.graph.add_edge("translation", END)
 
         return self.graph
