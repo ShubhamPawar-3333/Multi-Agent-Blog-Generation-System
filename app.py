@@ -1,45 +1,45 @@
 import os
 import uvicorn
 
+from pydantic import BaseModel
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from src.llms.groqllm import GroqLLM
 from src.graphs.graph_builder import GraphBuilder
 
+class BlogRequest(BaseModel):
+    topic: str
+    language: str = ""
+
 load_dotenv()
+os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
+
+## Module - level LLM init (Once, not per request)
+groqllm=GroqLLM()
+fast_llm = groqllm.fast_llm()
+quality_llm = groqllm.quality_llm()
+## get the graph
+graph_builder=GraphBuilder(fast_llm, quality_llm)
+
 
 app = FastAPI()
 
-os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 
 ## API endpoints
 @app.post("/blogs")
-async def create_blogs(request:Request):
+async def create_blogs(request:BlogRequest):
+    if not request.topic.strip():
+        raise HTTPException(status_code=400, detail="Topic is required")
     
-    data = await request.json()
-    topic = data.get("topic","")
-    language = data.get("language", '')
-    print(language)
-
-    ## get the llm object
-
-    groqllm=GroqLLM()
-    fast_llm = groqllm.fast_llm()
-    quality_llm = groqllm.quality_llm()
-
-    ## get the graph
-    graph_builder=GraphBuilder(fast_llm, quality_llm)
-    if topic and language:
+    if request.language:
         graph=graph_builder.setup_graph(usecase="language")
-
-        ## invoke graph
-        state=graph.invoke({"topic":topic,"current_language":language.lower()})
-
-    elif topic:
+        state=graph.invoke({
+            "topic":request.topic,
+            "current_language":request.language.lower()
+        })
+    else:
         graph=graph_builder.setup_graph(usecase="topic")
-
-        ## invoke graph
-        state=graph.invoke({"topic":topic})
+        state=graph.invoke({"topic":request.topic})
 
     return {"data":state}
 
