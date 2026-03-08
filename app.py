@@ -18,8 +18,6 @@ os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 groqllm=GroqLLM()
 fast_llm = groqllm.fast_llm()
 quality_llm = groqllm.quality_llm()
-## get the graph
-graph_builder=GraphBuilder(fast_llm, quality_llm)
 
 
 app = FastAPI()
@@ -30,6 +28,9 @@ app = FastAPI()
 async def create_blogs(request:BlogRequest):
     if not request.topic.strip():
         raise HTTPException(status_code=400, detail="Topic is required")
+    
+    ## get the graph
+    graph_builder=GraphBuilder(fast_llm, quality_llm)
     
     if request.language:
         graph=graph_builder.setup_graph(usecase="language")
