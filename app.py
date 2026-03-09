@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from src.llms.groqllm import GroqLLM
 from src.graphs.graph_builder import GraphBuilder
+from src.utils.logger import get_logger
 
 class BlogRequest(BaseModel):
     topic: str
@@ -30,9 +31,12 @@ async def global_exception_handler(request, exc):
         content={"error": "Blog generation failed", "detail":str(exc)}
     )
 
+logger = get_logger("app")
+
 ## API endpoints
 @app.post("/blogs")
 async def create_blogs(request:BlogRequest):
+    logger.info("Blog request received: topic:'%s', language='%s'", request.topic, request.language)
     if not request.topic.strip():
         raise HTTPException(status_code=400, detail="Topic is required")
     

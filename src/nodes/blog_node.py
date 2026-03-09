@@ -2,6 +2,9 @@ from src.states.blogstate import BlogState
 from langchain_core.messages import HumanMessage
 from src.states.blogstate import Blog, BlogOutline, BlogSection, TitleMeta, TakeawayCTA, ReviewResult
 from src.utils.retry import retry_llm_call
+from src.utils.logger import get_logger
+
+logger = get_logger("blog_node")
 
 class BlogNode:
     """
@@ -13,6 +16,7 @@ class BlogNode:
     
     def outline_generation(self, state: BlogState):
         """Generate a structured outline from the topic."""
+        logger.info("Generating outline for topic: %s", state["topic"])
         structured_llm = self.fast_llm.with_structured_output(BlogOutline)
         prompt = """
                     You are a senior content strategist.
@@ -26,6 +30,7 @@ class BlogNode:
             topic=state["topic"]
         )
         outline = retry_llm_call(lambda: structured_llm.invoke(system_message))
+        logger.info("Outline generated with %d sections", len(outline.sections))
         return {"outline": outline}
 
     def title_creation(self, state: BlogState):
