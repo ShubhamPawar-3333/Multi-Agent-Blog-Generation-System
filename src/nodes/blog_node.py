@@ -1,6 +1,7 @@
 from src.states.blogstate import BlogState
 from langchain_core.messages import HumanMessage
 from src.states.blogstate import Blog, BlogOutline, BlogSection, TitleMeta, TakeawayCTA, ReviewResult
+from src.utils.retry import retry_llm_call
 
 class BlogNode:
     """
@@ -24,7 +25,7 @@ class BlogNode:
         system_message = prompt.format(
             topic=state["topic"]
         )
-        outline = structured_llm.invoke(system_message)
+        outline = retry_llm_call(lambda: structured_llm.invoke(system_message))
         return {"outline": outline}
 
     def title_creation(self, state: BlogState):
@@ -44,7 +45,7 @@ class BlogNode:
             topic = state["topic"],
             sections = [s.heading for s in state["outline"].sections]
         )
-        response = structured_llm.invoke(system_message)
+        response = retry_llm_call(lambda: structured_llm.invoke(system_message))
         blog = Blog(
             title = response.title,
             meta_description = response.meta_description,
@@ -72,7 +73,7 @@ class BlogNode:
             title = blog.title,
             sections = [s.heading for s in state["outline"].sections]
         )
-        response = self.quality_llm.invoke(system_message)
+        response = retry_llm_call(lambda: self.quality_llm.invoke(system_message))
         blog.introduction = response.content.strip()
 
         return {"blog": blog}
@@ -133,7 +134,7 @@ class BlogNode:
                     heading = heading,
                     key_points = key_points
                 )
-            response = self.quality_llm.invoke(system_message)
+            response = retry_llm_call(lambda: self.quality_llm.invoke(system_message))
             section = BlogSection(
                 heading = heading,
                 content = response.content.strip()
@@ -164,7 +165,7 @@ class BlogNode:
         system_message = prompt.format(
             full_content = full_content
         )
-        result = structured_llm.invoke(system_message)
+        result = retry_llm_call(lambda: structured_llm.invoke(system_message))
         return  {
             "review_feedback": result.feedback,
             "review_count": review_count + 1,
@@ -204,7 +205,7 @@ class BlogNode:
         system_message = prompt.format(
             full_content = full_content
         )
-        response = structured_llm.invoke(system_message)
+        response = retry_llm_call(lambda: structured_llm.invoke(system_message))
         blog.key_takeaways = response.key_takeaways
         blog.call_to_action = response.call_to_action
         return {"blog": blog}
@@ -232,10 +233,10 @@ class BlogNode:
                                 {full_blog_markdown}
                             """
 
-        response = self.quality_llm.invoke(
-            [HumanMessage(content=translation_prompt)]
+        response = retry_llm_call(lambda: self.quality_llm.invoke(
+                [HumanMessage(content=translation_prompt)]
+            )
         )
-
         return {
             "translated_content": response.content,
             "blog": blog

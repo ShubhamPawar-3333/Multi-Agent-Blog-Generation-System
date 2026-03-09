@@ -4,6 +4,7 @@ import uvicorn
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from src.llms.groqllm import GroqLLM
 from src.graphs.graph_builder import GraphBuilder
 
@@ -22,6 +23,12 @@ quality_llm = groqllm.quality_llm()
 
 app = FastAPI()
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Blog generation failed", "detail":str(exc)}
+    )
 
 ## API endpoints
 @app.post("/blogs")
