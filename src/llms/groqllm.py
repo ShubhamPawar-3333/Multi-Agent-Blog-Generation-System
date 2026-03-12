@@ -4,9 +4,9 @@ import os
 
 
 class GroqLLM:
-    def __init__(self):
+    def __init__(self, api_key=None):
         load_dotenv()
-        self.groq_api_key = os.getenv("GROQ_API_KEY")
+        self.groq_api_key = api_key or os.getenv("GROQ_API_KEY")
 
     def get_llm(self, model_name: str):
         try:
