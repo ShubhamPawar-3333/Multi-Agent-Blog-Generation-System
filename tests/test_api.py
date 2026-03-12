@@ -14,7 +14,7 @@ class TestBlogAPI:
     def test_empty_topic_returns_400(self):
         from app import app
         client = TestClient(app)
-        response = client.post("/blogs", json={"topic": "  "})
+        response = client.post("/blogs", json={"topic": "  ", "api_key": "fake-key"})
         assert response.status_code == 400
 
     def test_invalid_json_returns_422(self):
