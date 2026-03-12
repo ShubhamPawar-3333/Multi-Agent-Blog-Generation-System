@@ -602,3 +602,192 @@ body {
         background-position: -200% 0;
     }
 }
+
+.api-key-wrapper.error {
+    border-color: #f43f5e;
+    animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-6px);
+    }
+
+    75% {
+        transform: translateX(6px);
+    }
+}
+
+.generate-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.generate-btn.loading span {
+    display: none;
+}
+
+.generate-btn.loading::after {
+    content: '⏳ Generating...';
+}
+
+.blog-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.blog-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.blog-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+/* ===== Pipeline Graph ===== */
+.graph-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+.graph-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.node-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 20px;
+    min-width: 200px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.4s ease;
+}
+
+.node-box.start,
+.node-box.end {
+    background: rgba(124, 58, 237, 0.12);
+    border-color: rgba(124, 58, 237, 0.4);
+    color: #c4b5fd;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.graph-arrow {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 1rem;
+    line-height: 1;
+    padding: 4px 0;
+    transition: color 0.3s;
+}
+
+.node-label {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.node-time {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Node States */
+.graph-node.pending .node-box {
+    border-color: rgba(255, 255, 255, 0.06);
+    opacity: 0.5;
+}
+
+.graph-node.active .node-box {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.graph-node.active .node-label {
+    color: #f59e0b;
+}
+
+.graph-node.active .graph-arrow {
+    color: #f59e0b;
+}
+
+.graph-node.completed .node-box {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.graph-node.completed .node-label {
+    color: #10b981;
+}
+
+.graph-node.completed .node-time {
+    color: #10b981;
+}
+
+.graph-node.completed .graph-arrow {
+    color: #10b981;
+}
+
+/* Review branches */
+.review-branches {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+    padding: 4px 0;
+}
+
+.branch-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+.rewrite-label {
+    color: #f59e0b;
+}
+
+/* ===== Transition Animation ===== */
+.landing.slide-up {
+    animation: slideUp 0.6s ease forwards;
+}
+
+@keyframes slideUp {
+    to {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+}
+
+.results.fade-in {
+    animation: fadeIn 0.5s ease 0.3s both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

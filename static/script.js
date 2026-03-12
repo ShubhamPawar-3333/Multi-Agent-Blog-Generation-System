@@ -38,29 +38,45 @@ topicInput.addEventListener('input', () => {
     generateBtn.disabled = !hasTopic;
 });
 
+topicInput.addEventListener('keydown', (e) => {
+    if (e.key === "Enter" && !generateBtn.disabled) {
+        startGeneration();
+    }
+})
+
 // ===== Generate Blog =====
 generateBtn.addEventListener('click', startGeneration);
 
 async function startGeneration() {
+    generateBtn.classList.add('loading');
     const topic = topicInput.value.trim();
     const language = languageSelect.value;
     const apiKey = apiKeyInput.value.trim();
 
     if (!topic) return;
     if (!apiKey) {
-        apiKeyInput.style.borderColor = '#f43f5e';
+        apiKeyInput.parentElement.classList.add('error');
         apiKeyInput.focus();
-        setTimeout(() => apiKeyInput.style.borderColor = '', 2000);
+        setTimeout(() => apiKeyInput.parentElement.classList.remove('error'), 2000);
         return;
     }
 
-    // Switch to results state
-    landingState.classList.add('hidden');
-    resultsState.classList.remove('hidden');
+    // Animate: slide landing up, then fade results in
+    landingState.classList.add('slide-up');
+    document.querySelector('.api-key-bar').classList.add('hidden');
+
+    setTimeout(() => {
+        landingState.classList.add('hidden');
+        landingState.classList.remove('slide-up');
+        resultsState.classList.remove('hidden');
+        resultsState.classList.add('fade-in');
+    }, 600);
+
 
     // Set top bar tags
     topicTag.textContent = topic;
     langTag.textContent = language || 'English';
+
 
     // Initialize pipeline nodes
     const nodes = language
@@ -83,13 +99,37 @@ async function startGeneration() {
 
 // ===== Initialize Pipeline UI =====
 function initPipelineUI(nodes) {
-    pipelineNodes.innerHTML = nodes.map(node => `
-        <div class="pipeline-node pending" data-node="${node.id}">
-            <div class="node-dot"></div>
-            <span class="node-name">${node.label}</span>
-            <span class="node-time"></span>
+    pipelineNodes.innerHTML = `
+        <div class="graph-flow">
+            <div class="graph-node start-node">
+                <div class="node-box start">__start__</div>
+                <div class="graph-arrow">↓</div>
+            </div>
+            ${nodes.map((node, i) => {
+        const isReview = node.id === 'review';
+        const isSection = node.id === 'section_generation';
+        return `
+                    <div class="graph-node pending" data-node="${node.id}">
+                        <div class="node-box">
+                            <span class="node-label">${node.label}</span>
+                            <span class="node-time"></span>
+                        </div>
+                        ${isReview ? `
+                            <div class="review-branches">
+                                <span class="branch-label pass-label">pass</span>
+                                <span class="branch-label rewrite-label">rewrite ↩</span>
+                            </div>
+                        ` : ''}
+                        ${i < nodes.length - 1 && !isReview ? '<div class="graph-arrow">↓</div>' : ''}
+                        ${isReview ? '<div class="graph-arrow">↓</div>' : ''}
+                    </div>
+                `;
+    }).join('')}
+            <div class="graph-node end-node">
+                <div class="node-box end">__end__</div>
+            </div>
         </div>
-    `).join('');
+    `;
 }
 
 // ===== Update Pipeline Node Status =====
@@ -97,14 +137,15 @@ function updateNodeStatus(nodeId, status, duration) {
     const nodeEl = document.querySelector(`[data-node="${nodeId}"]`);
     if (!nodeEl) return;
 
-    nodeEl.className = `pipeline-node ${status}`;
+    nodeEl.className = `graph-node ${status}`;
 
     if (status === 'completed' && duration !== undefined) {
         nodeEl.querySelector('.node-time').textContent = `${duration}s`;
     }
 
     if (status === 'completed') {
-        nodeEl.querySelector('.node-dot').textContent = '✓';
+        const label = nodeEl.querySelector('.node-label');
+        label.textContent = '✓ ' + label.textContent.replace('✓ ', '');
     }
 }
 
@@ -174,8 +215,10 @@ async function streamBlog(topic, language, apiKey, nodes) {
                 }
             }
         }
+        generateBtn.classList.remove('loading');
     } catch (error) {
         blogContent.innerHTML = `<p style="color: #f43f5e;">Connection error: ${error.message}</p>`;
+        generateBtn.classList.remove('loading');
     }
 }
 
@@ -263,6 +306,7 @@ copyBtn.addEventListener('click', () => {
 
 // ===== New Blog Button =====
 newBlogBtn.addEventListener('click', () => {
+    document.querySelector('.api-key-bar').classList.remove('hidden');
     resultsState.classList.add('hidden');
     landingState.classList.remove('hidden');
     topicInput.value = '';
