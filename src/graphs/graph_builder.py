@@ -86,8 +86,9 @@ class GraphBuilder:
         return graph.compile()
     
 ## Below code is for the langsmith langgraph studio
-groq = GroqLLM()
-
-# Get the graph
-graph_builder = GraphBuilder(groq.fast_llm(), groq.quality_llm())
-graph = graph_builder.build_language_graph().compile()
+try:
+    groq = GroqLLM()
+    graph_builder = GraphBuilder(groq.fast_llm(), groq.quality_llm())
+    graph = graph_builder.build_language_graph().compile()
+except ValueError:
+    graph = None  # Studio unavailable without GROQ_API_KEY
