@@ -28,6 +28,10 @@ app = FastAPI()
 async def serve_frontend():
     return FileResponse("static/index.html")
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # Server static frontend files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
