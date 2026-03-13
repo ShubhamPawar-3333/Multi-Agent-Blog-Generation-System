@@ -1,5 +1,7 @@
 # Quillflow — Multi-Agent Blog Generation System with Quality Assurance
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://YOUR-URL.onrender.com)
+
 A production-grade, agentic AI blog generation system that uses a 7-node LangGraph pipeline to outline, write, self-review, and refine publish-ready blog content from a single topic. Features a real-time streaming frontend with pipeline visualization.
 
 ## Overview
@@ -178,6 +180,10 @@ pytest tests/ -v
 docker build -t quillflow .
 docker run -p 8000:8000 quillflow
 ```
+
+### Live Demo
+
+Visit [https://YOUR-URL.onrender.com](https://YOUR-URL.onrender.com)
 
 ## Usage
 
