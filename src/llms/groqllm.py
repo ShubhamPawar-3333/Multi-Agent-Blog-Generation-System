@@ -7,6 +7,8 @@ class GroqLLM:
     def __init__(self, api_key=None):
         load_dotenv()
         self.groq_api_key = api_key or os.getenv("GROQ_API_KEY")
+        if not self.groq_api_key:
+            raise ValueError("Groq API key is required. Provide it via the frontend.")
 
     def get_llm(self, model_name: str):
         try:

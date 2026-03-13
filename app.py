@@ -18,7 +18,7 @@ class BlogRequest(BaseModel):
     api_key: str # Required - user provides their Groq API Key
 
 load_dotenv()
-os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
+os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGCHAIN_API_KEY", "")
 
 # LLMs are created per-prequest with user's API key
 
